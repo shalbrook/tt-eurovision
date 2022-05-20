@@ -1,0 +1,80 @@
+---
+title: "Eurovision Contest Analysis"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+This is some analysis of [Eurovision song contest data](https://github.com/rfordatascience/tidytuesday/tree/master/data/2022/2022-05-17), courtesy of [Tidy Tuesday](https://github.com/rfordatascience/tidytuesday).
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+#tuesdata <- tidytuesdayR::tt_load('2022-05-17')
+#tuesdata <- tidytuesdayR::tt_load(2022, week = 20)
+#eurovision <- tuesdata$eurovision
+#eurovision <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-05-17/eurovision.csv')
+eurovision <- readr::read_csv('eurovision.csv')
+```
+
+First, who won? Note the name of the final competition was changed in 2004 from "final" to "grand final" so we have to allow for both.
+
+```{r message = FALSE, warning = FALSE}
+eurovision %>%
+  filter(winner == TRUE, section == "final" | section == "grand-final") %>%
+  select(year, artist, song, artist_country, total_points)
+```
+
+Who are the top 10 winners by total points?
+
+```{r}
+eurovision %>%
+  filter(winner == TRUE, section == "final" | section == "grand-final") %>%
+  select(year, artist, song, artist_country, total_points) %>%
+  slice_max(total_points, n=10)
+```
+
+All pretty recent. Have the winners' point totals been increasing over time?
+
+```{r message = FALSE, warning = FALSE}
+eurovision %>%
+  filter(winner == TRUE, section == "final" | section == "grand-final") %>%
+  select(year, artist, song, artist_country, total_points) %>%
+  ggplot() + geom_point(mapping = aes(x = year, y = total_points))
+```
+
+Sure have. Either the acts are getting better or the judges are getting easier to impress.
+
+What's the relationship look like between an artist's total points (in all rounds) and their rank? We use year to color the points to give us a sense of scores over time.
+
+```{r message = FALSE, warning = FALSE}
+eurovision %>% ggplot(aes(x = total_points, y = rank)) +
+  geom_point(aes(color = year)) + geom_smooth(color = "orange")
+```
+
+This plot could help us infer an artist's rank based on their final point total. Or vice versa.
+
+What countries have the most wins?
+
+```{r message = FALSE, warning = FALSE}
+eurovision %>%
+  filter(winner == TRUE, section == "final" | section == "grand-final") %>%
+  group_by(artist_country) %>%
+  summarise(count = n()) %>%
+  slice_max(count, n=10)
+```
+
+Ireland has done well but no countries seem to dominate the contest really.
+
+How have the winning countries changed over the years? This shows the number of victories for each country, with lighter colors for more recent wins. France's and Spain's glory days are past, it seems.
+
+```{r message = FALSE, warning = FALSE}
+eurovision %>%
+  filter(winner == TRUE, section == "final" | section == "grand-final") %>%
+  group_by(artist_country, year) %>%
+  summarise(count = n()) %>%
+  ggplot() +
+    geom_col(mapping = aes(x = artist_country, y = count, fill = year)) +
+    coord_flip()
+```
+
