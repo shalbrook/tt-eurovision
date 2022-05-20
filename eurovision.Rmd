@@ -4,6 +4,11 @@ output:
   html_document:
     df_print: paged
   pdf_document: default
+knit: (function(input_file, encoding) {
+    out_dir <- 'docs';
+    rmarkdown::render(input_file,
+      encoding=encoding,
+      output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
 ---
 
 This is some analysis of [Eurovision song contest data](https://github.com/rfordatascience/tidytuesday/tree/master/data/2022/2022-05-17), courtesy of [Tidy Tuesday](https://github.com/rfordatascience/tidytuesday).
